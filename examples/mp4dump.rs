@@ -51,7 +51,7 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
         build_box(&mp4.moov.mvhd),
     ];
 
-    if let Some(ref mvex) = &mp4.moov.mvex {
+    if let Some(mvex) = &mp4.moov.mvex {
         boxes.push(build_box(mvex));
         if let Some(mehd) = &mvex.mehd {
             boxes.push(build_box(mehd));
@@ -63,9 +63,9 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
     for track in mp4.tracks().values() {
         boxes.push(build_box(&track.trak));
         boxes.push(build_box(&track.trak.tkhd));
-        if let Some(ref edts) = track.trak.edts {
+        if let Some(edts) = &track.trak.edts {
             boxes.push(build_box(edts));
-            if let Some(ref elst) = edts.elst {
+            if let Some(elst) = &edts.elst {
                 boxes.push(build_box(elst));
             }
         }
@@ -79,10 +79,10 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
 
         // trak.mdia.minf
         let minf = &track.trak.mdia.minf;
-        if let Some(ref vmhd) = &minf.vmhd {
+        if let Some(vmhd) = &minf.vmhd {
             boxes.push(build_box(vmhd));
         }
-        if let Some(ref smhd) = &minf.smhd {
+        if let Some(smhd) = &minf.smhd {
             boxes.push(build_box(smhd));
         }
 
@@ -90,28 +90,28 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
         let stbl = &track.trak.mdia.minf.stbl;
         boxes.push(build_box(stbl));
         boxes.push(build_box(&stbl.stsd));
-        if let Some(ref avc1) = &stbl.stsd.avc1 {
+        if let Some(avc1) = &stbl.stsd.avc1 {
             boxes.push(build_box(avc1));
         }
-        if let Some(ref hev1) = &stbl.stsd.hev1 {
+        if let Some(hev1) = &stbl.stsd.hev1 {
             boxes.push(build_box(hev1));
         }
-        if let Some(ref mp4a) = &stbl.stsd.mp4a {
+        if let Some(mp4a) = &stbl.stsd.mp4a {
             boxes.push(build_box(mp4a));
         }
         boxes.push(build_box(&stbl.stts));
-        if let Some(ref ctts) = &stbl.ctts {
+        if let Some(ctts) = &stbl.ctts {
             boxes.push(build_box(ctts));
         }
-        if let Some(ref stss) = &stbl.stss {
+        if let Some(stss) = &stbl.stss {
             boxes.push(build_box(stss));
         }
         boxes.push(build_box(&stbl.stsc));
         boxes.push(build_box(&stbl.stsz));
-        if let Some(ref stco) = &stbl.stco {
+        if let Some(stco) = &stbl.stco {
             boxes.push(build_box(stco));
         }
-        if let Some(ref co64) = &stbl.co64 {
+        if let Some(co64) = &stbl.co64 {
             boxes.push(build_box(co64));
         }
     }
@@ -123,7 +123,7 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
         for traf in moof.trafs.iter() {
             boxes.push(build_box(traf));
             boxes.push(build_box(&traf.tfhd));
-            if let Some(ref trun) = &traf.trun {
+            if let Some(trun) = &traf.trun {
                 boxes.push(build_box(trun));
             }
         }
