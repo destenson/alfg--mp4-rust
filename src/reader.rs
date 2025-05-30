@@ -12,7 +12,7 @@ pub struct Mp4Reader<R> {
     pub moov: MoovBox,
     pub moofs: Vec<MoofBox>,
     pub emsgs: Vec<EmsgBox>,
-    pub sidx: Option<SidxBox>,
+    pub sidx: Vec<(SidxBox, usize)>, // (SidxBox, offset)
 
     tracks: HashMap<u32, Mp4Track>,
     size: u64,
@@ -27,7 +27,8 @@ impl<R: Read + Seek> Mp4Reader<R> {
         let mut moofs = Vec::new();
         let mut moof_offsets = Vec::new();
         let mut emsgs = Vec::new();
-        let mut sidx = None;
+        let mut sidx = Vec::new();
+        // let mut sidx_offsets = Vec::new();
 
         let mut current = start;
         while current < size {
@@ -70,7 +71,10 @@ impl<R: Read + Seek> Mp4Reader<R> {
                     emsgs.push(emsg);
                 }
                 BoxType::SidxBox => {
-                    sidx = Some(SidxBox::read_box(&mut reader, s)?);
+                    let sidx_offset = reader.stream_position()? - 8;
+                    let s = SidxBox::read_box(&mut reader, s)?;
+                    sidx.push((s, sidx_offset as usize));
+                    // sidx_offsets.push(sidx_offset);
                 }
                 _ => {
                     // XXX warn!()
@@ -122,7 +126,13 @@ impl<R: Read + Seek> Mp4Reader<R> {
                 }
             }
         }
-
+        if !sidx.is_empty() {
+            let sidx_offsets: Vec<usize> = sidx.iter().map(|(_, offset)| *offset).collect();
+            for (sidx_box, offset) in sidx.iter() {
+                println!("SidxBox at offset {}: {:?}", offset, sidx_box);
+            }
+        }
+        
         Ok(Mp4Reader {
             reader,
             ftyp: ftyp.unwrap(),
@@ -144,7 +154,7 @@ impl<R: Read + Seek> Mp4Reader<R> {
 
         let mut moofs = Vec::new();
         let mut moof_offsets = Vec::new();
-        let mut sidx = None;
+        let mut sidx = Vec::new();
 
         let mut current = start;
         while current < size {
@@ -174,7 +184,9 @@ impl<R: Read + Seek> Mp4Reader<R> {
                     moof_offsets.push(moof_offset);
                 }
                 BoxType::SidxBox => {
-                    sidx = Some(SidxBox::read_box(&mut reader, s)?);
+                    let offset = reader.stream_position()? - 8;
+                    let s = SidxBox::read_box(&mut reader, s)?;
+                    sidx.push((s, offset as usize));
                 }
                 _ => {
                     // XXX warn!()
@@ -281,8 +293,11 @@ impl<R: Read + Seek> Mp4Reader<R> {
             Err(Error::TrakNotFound(track_id))
         }
     }
-    
-    pub fn segment_index(&self) -> Option<&SidxBox> {
+
+    pub fn segment_index(&self) -> Option<&(SidxBox, usize)> {
+        self.sidx.first()
+    }
+    pub fn segment_indexes(&self) -> &Vec<(SidxBox, usize)> {
         self.sidx.as_ref()
     }
 }

@@ -25,15 +25,30 @@ fn dump<P: AsRef<Path>>(filename: &P) -> Result<()> {
 
     // print out boxes
     for b in boxes.iter() {
-        println!("[{}] size={} {}", b.name, b.size, b.summary);
+        match b.name.as_str() {
+            // "ftyp" => println!("[{}] size={} major_brand={} compatible_brands={}",
+            //                   b.name, b.size, b.summary, b.summary),
+            // "moov" => println!("[{}] size={} {}", b.name, b.size, b.summary),
+            // "mvhd" => println!("[{}] size={} timescale={} duration={}",
+            //                   b.name, b.size, b.summary, b.summary),
+            // "trak" => println!("[{}] size={} {}", b.name, b.size, b.summary),
+            // "mdia" => println!("[{}] size={} {}", b.name, b.size, b.summary),
+            "tfhd" => {},
+            "traf" => {},
+            "trun" => {},
+            "mfhd" => {}
+            "sidx" => println!("[{}] size={} {}", b.name, b.size, b.summary),
+            _ => {},
+        }
     }
-
+    
     Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Box {
     name: String,
+    byte_offset: u64,
     size: u64,
     summary: String,
     indent: u32,
@@ -51,8 +66,8 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
         build_box(&mp4.moov.mvhd),
     ];
     
-    if let Some(sidx) = &mp4.sidx {
-        boxes.push(build_box(sidx));
+    for sidx in mp4.sidx.iter() {
+        boxes.push(build_box(&sidx.0));
     }
 
     if let Some(mvex) = &mp4.moov.mvex {
@@ -139,6 +154,7 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
 fn build_box<M: Mp4Box + std::fmt::Debug>(m: &M) -> Box {
     Box {
         name: m.box_type().to_string(),
+        byte_offset: m.byte_offset().unwrap_or(0),
         size: m.box_size(),
         summary: m.summary().unwrap(),
         indent: 0,

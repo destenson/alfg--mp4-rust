@@ -29,11 +29,11 @@
 //!                         hev1
 //!                         mp4a
 //!                         tx3g
-//!                     stts
-//!                     stsc
-//!                     stsz
-//!                     stss
-//!                     stco
+//!                     stts <-- decoding time to sample
+//!                     stsc <-- sample to chunk
+//!                     stsz <-- sample sizes
+//!                     stss <-- sync samples/keyframes
+//!                     stco <-- chunk offsets
 //!                     co64
 //!                     ctts
 //!                 dinf
@@ -249,6 +249,8 @@ pub trait Mp4Box: Sized {
     fn box_size(&self) -> u64;
     fn to_json(&self) -> Result<String>;
     fn summary(&self) -> Result<String>;
+    
+    fn byte_offset(&self) -> Option<u64> { None }
 }
 
 pub trait ReadBox<T>: Sized {
