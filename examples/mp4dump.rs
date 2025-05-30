@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 use std::path::Path;
-
-use mp4::{Mp4Box, Result};
+use std::sync::Arc;
+use mp4::{Mp4Box, Result, TrackType};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -50,6 +50,10 @@ fn get_boxes(file: File) -> Result<Vec<Box>> {
         build_box(&mp4.moov),
         build_box(&mp4.moov.mvhd),
     ];
+    
+    if let Some(sidx) = &mp4.sidx {
+        boxes.push(build_box(sidx));
+    }
 
     if let Some(mvex) = &mp4.moov.mvex {
         boxes.push(build_box(mvex));

@@ -12,6 +12,7 @@ pub struct Mp4Reader<R> {
     pub moov: MoovBox,
     pub moofs: Vec<MoofBox>,
     pub emsgs: Vec<EmsgBox>,
+    pub sidx: Option<SidxBox>,
 
     tracks: HashMap<u32, Mp4Track>,
     size: u64,
@@ -26,6 +27,7 @@ impl<R: Read + Seek> Mp4Reader<R> {
         let mut moofs = Vec::new();
         let mut moof_offsets = Vec::new();
         let mut emsgs = Vec::new();
+        let mut sidx = None;
 
         let mut current = start;
         while current < size {
@@ -66,6 +68,9 @@ impl<R: Read + Seek> Mp4Reader<R> {
                 BoxType::EmsgBox => {
                     let emsg = EmsgBox::read_box(&mut reader, s)?;
                     emsgs.push(emsg);
+                }
+                BoxType::SidxBox => {
+                    sidx = Some(SidxBox::read_box(&mut reader, s)?);
                 }
                 _ => {
                     // XXX warn!()
@@ -124,6 +129,7 @@ impl<R: Read + Seek> Mp4Reader<R> {
             moov: moov.unwrap(),
             moofs,
             emsgs,
+            sidx,
             size,
             tracks,
         })
@@ -138,6 +144,7 @@ impl<R: Read + Seek> Mp4Reader<R> {
 
         let mut moofs = Vec::new();
         let mut moof_offsets = Vec::new();
+        let mut sidx = None;
 
         let mut current = start;
         while current < size {
@@ -165,6 +172,9 @@ impl<R: Read + Seek> Mp4Reader<R> {
                     let moof = MoofBox::read_box(&mut reader, s)?;
                     moofs.push(moof);
                     moof_offsets.push(moof_offset);
+                }
+                BoxType::SidxBox => {
+                    sidx = Some(SidxBox::read_box(&mut reader, s)?);
                 }
                 _ => {
                     // XXX warn!()
@@ -210,6 +220,7 @@ impl<R: Read + Seek> Mp4Reader<R> {
             moov: self.moov.clone(),
             moofs,
             emsgs: Vec::new(),
+            sidx,
             tracks,
             size,
         })
@@ -269,6 +280,10 @@ impl<R: Read + Seek> Mp4Reader<R> {
         } else {
             Err(Error::TrakNotFound(track_id))
         }
+    }
+    
+    pub fn segment_index(&self) -> Option<&SidxBox> {
+        self.sidx.as_ref()
     }
 }
 

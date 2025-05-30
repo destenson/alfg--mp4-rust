@@ -105,6 +105,7 @@ pub mod udta;
 pub mod vmhd;
 pub mod vp09;
 pub mod vpcc;
+pub mod sidx;
 
 pub use avc1::Avc1Box;
 pub use co64::Co64Box;
@@ -129,6 +130,7 @@ pub use moov::MoovBox;
 pub use mp4a::Mp4aBox;
 pub use mvex::MvexBox;
 pub use mvhd::MvhdBox;
+pub use sidx::SidxBox;
 pub use smhd::SmhdBox;
 pub use stbl::StblBox;
 pub use stco::StcoBox;
@@ -237,6 +239,7 @@ boxtype! {
     DayBox => 0xa9646179,
     CovrBox => 0x636f7672,
     DescBox => 0x64657363,
+    SidxBox => 0x73696478,
     WideBox => 0x77696465,
     WaveBox => 0x77617665
 }
